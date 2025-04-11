@@ -6,7 +6,6 @@ import "gorm.io/gorm"
 
 type TaskRepository interface {
 	Create(task Task) (Task, error)
-	GetByID(id string) (Task, error)
 	GetTaskByID(id string) (Task, error)
 	Update(id string, task Task) (Task, error)
 	DeleteTask(id string) error
@@ -18,14 +17,6 @@ type tskRepository struct {
 
 func NewTaskRepository(db *gorm.DB) TaskRepository {
 	return &tskRepository{db: db}
-}
-
-func (r *tskRepository) GetByID(id string) (Task, error) {
-	var task Task
-	if err := r.db.First(&task, "id = ?", id).Error; err != nil {
-		return Task{}, err
-	}
-	return task, nil
 }
 
 func (r *tskRepository) Create(task Task) (Task, error) {

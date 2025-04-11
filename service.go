@@ -15,8 +15,6 @@ func NewTaskService(r TaskRepository) TaskService {
 	return &tskService{repo: r}
 }
 
-func (s *tskService) GetTask() (Task, error)
-
 // CreateTask implements TaskService.
 func (s *tskService) CreateTask(task Task) (Task, error) { // Добавьте параметр
 	// Реализация метода
@@ -40,7 +38,7 @@ func (s *tskService) GetTaskByID(id string) (Task, error) {
 // UpdateTask implements TaskService.
 func (s *tskService) UpdateTask(id string, updatedTask Task) (Task, error) {
 	// 1. Получите существующую задачу
-	existingTask, err := s.repo.GetByID(id)
+	existingTask, err := s.repo.GetTaskByID(id)
 	if err != nil {
 		return Task{}, err
 	}
