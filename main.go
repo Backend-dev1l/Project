@@ -1,52 +1,31 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"log"
-	"net/http"
+	"RestApi/internal/db"
+	"RestApi/internal/handlers"
+	"RestApi/internal/taskService"
 
-	"github.com/gorilla/mux"
+	"log"
+
+	"github.com/labstack/echo/v4"
 )
 
-var task string
-
-func HelloHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	fmt.Fprintf(w, "Hello, World")
-}
-
-func TaskHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	var requestData struct {
-		Task string `json:"task"`
-	}
-
-	err := json.NewDecoder(r.Body).Decode(&requestData)
-	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
-
-	task = requestData.Task
-
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "Task updated successfully: %s", task)
-}
+// Основные методы ORM - Find, Create, Update, Delete
 
 func main() {
+	database, err := db.InitDB()
+	if err != nil {
+		log.Fatalf("Could not connect to DB: %v", err)
+	}
+	e := echo.New()
 
-	router := mux.NewRouter()
-	router.HandleFunc("/hello", HelloHandler).Methods("GET")
-	router.HandleFunc("/task", TaskHandler).Methods("POST")
-	log.Println("Server starting on :8080...")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	tskRepo := taskService.NewTaskRepository(database)
+	tskService := taskService.NewTaskService(tskRepo)
+	tskHandlers := handlers.NewTaskHAndler(tskService)
+
+	e.DELETE("/tasks/:id", tskHandlers.DeleteTask)
+	e.GET("/tasks", tskHandlers.GetTask)
+	e.POST("/tasks", tskHandlers.PostTask)
+	e.PATCH("/tasks/:id", tskHandlers.PatchTask)
+	e.Start(":8081")
 }
